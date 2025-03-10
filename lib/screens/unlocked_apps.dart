@@ -2,6 +2,9 @@ import 'dart:ui';
 
 import 'package:app_lock_flutter/executables/controllers/method_channel_controller.dart';
 import 'package:app_lock_flutter/executables/controllers/password_controller.dart';
+import 'package:app_lock_flutter/models/application_model.dart';
+import 'package:app_lock_flutter/screens/add_to_lockedList_sheet.dart';
+import 'package:app_lock_flutter/screens/display_locked_apps.dart';
 import 'package:app_lock_flutter/widgets/confirmation_dialog.dart';
 // import 'package:device_apps/device_apps.dart';
 import 'package:flutter/material.dart';
@@ -9,8 +12,9 @@ import 'package:flutter_switch/flutter_switch.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/instance_manager.dart';
 import 'package:get/state_manager.dart';
-import 'package:lottie/lottie.dart';
 import 'package:app_lock_flutter/screens/search.dart';
+import 'package:installed_apps/app_info.dart';
+import 'package:lottie/lottie.dart';
 import '../executables/controllers/apps_controller.dart';
 import '../services/constant.dart';
 import '../widgets/pass_confirm_dialog.dart';
@@ -75,6 +79,26 @@ class UnlockedAppScreen extends StatelessWidget {
                 ),
           ),
           actions: [
+            Padding(
+              padding: const EdgeInsets.all(6.0),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: Theme.of(context).primaryColorDark,
+                  ),
+                ),
+                child: IconButton(
+                  onPressed: () {
+                    showAppsLockedListModalSheet(context);
+                  },
+                  icon: const Icon(
+                    Icons.lock_outlined,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.all(6.0),
               child: Container(
@@ -151,119 +175,121 @@ class UnlockedAppScreen extends StatelessWidget {
               width: size.width,
               child: GetBuilder<AppsController>(
                 builder: (appsController) {
-                  // if (appsController.unLockList.isEmpty) {
-                  //   return Center(
-                  //     child: Container(
-                  //       color: Colors.transparent,
-                  //       height: 300,
-                  //       child: Column(
-                  //         children: [
-                  //           Lottie.asset(
-                  //             "assets/jsonFiles/102600-pink-no-data.json",
-                  //             width: 200,
-                  //           ),
-                  //           Text(
-                  //             "Loading...",
-                  //             style: MyFont().subtitle(
-                  //               color: Theme.of(context).primaryColor,
-                  //               fontweight: FontWeight.w400,
-                  //             ),
-                  //           ),
-                  //         ],
-                  //       ),
-                  //     ),
-                  //   );
-                  // }
+                  if (appsController.unLockList.isEmpty) {
+                    return Center(
+                      child: Container(
+                        color: Colors.transparent,
+                        height: 300,
+                        child: Column(
+                          children: [
+                            Lottie.asset(
+                              "assets/jsonFiles/102600-pink-no-data.json",
+                              width: 200,
+                            ),
+                            Text(
+                              "Loading...",
+                              style: MyFont().subtitle(
+                                color: Theme.of(context).primaryColor,
+                                fontweight: FontWeight.w400,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
                   return RefreshIndicator(
                     onRefresh: () async {
                       return await appsController.getAppsData();
                     },
                     child: ListView.builder(
                       padding: EdgeInsets.zero,
-                      // itemCount: appsController.unLockList.length,
+                      itemCount: appsController.unLockList.length,
                       itemBuilder: (context, index) {
-                        // Application app = appsController.unLockList[index];
+                        AppInfo app = appsController.unLockList[index];
                         return Padding(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 10,
                             vertical: 5,
                           ),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: Theme.of(context).primaryColorDark,
+                          child: GestureDetector(
+                            onTap: () {
+                              voidAddToLockedAppsModalSheet(context, app);
+                            },
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: Theme.of(context).primaryColorDark,
+                                ),
                               ),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(5),
-                                  margin: const EdgeInsets.symmetric(
-                                    vertical: 10,
-                                    horizontal: 14,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(5),
+                                    margin: const EdgeInsets.symmetric(
+                                      vertical: 10,
+                                      horizontal: 14,
+                                    ),
+                                    height: 50,
+                                    width: 50,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(10),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.25),
+                                          blurRadius: 20.0,
+                                          offset: const Offset(5, 5),
+                                        ),
+                                      ],
+                                    ),
+                                    child: app.icon != null
+                                        ? CircleAvatar(
+                                            backgroundImage:
+                                                MemoryImage(app.icon!),
+                                            backgroundColor: Theme.of(context)
+                                                .primaryColorDark,
+                                          )
+                                        : CircleAvatar(
+                                            backgroundColor: Theme.of(context)
+                                                .primaryColorDark,
+                                            child: Text(
+                                              "N/A",
+                                              style: MyFont().subtitle(
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                          ),
                                   ),
-                                  height: 50,
-                                  width: 50,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(10),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.25),
-                                        blurRadius: 20.0,
-                                        offset: const Offset(5, 5),
-                                      ),
-                                    ],
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          app.name,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyLarge!
+                                              .copyWith(color: Colors.white),
+                                        ),
+                                        Text(
+                                          app.getVersionInfo(),
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleSmall!
+                                              .copyWith(
+                                                color: Colors.white,
+                                                fontSize: 12,
+                                              ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                  // child: app is ApplicationWithIcon &&
-                                  //         app.icon != null
-                                  //     ? CircleAvatar(
-                                  //         backgroundImage:
-                                  //             MemoryImage(app.icon!),
-                                  //         backgroundColor: Theme.of(context)
-                                  //             .primaryColorDark,
-                                  //       )
-                                  //     : CircleAvatar(
-                                  //         backgroundColor: Theme.of(context)
-                                  //             .primaryColorDark,
-                                  //         child: Text(
-                                  //           "N/A",
-                                  //           style: MyFont().subtitle(
-                                  //             color: Colors.grey,
-                                  //           ),
-                                  //         ),
-                                  //       ),
-                                ),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      // Text(
-                                      //   app.appName,
-                                      //   style: Theme.of(context)
-                                      //       .textTheme
-                                      //       .bodyLarge!
-                                      //       .copyWith(color: Colors.white),
-                                      // ),
-                                      // Text(
-                                      //   app is ApplicationWithIcon
-                                      //       ? (app.versionName ?? "N/A")
-                                      //       : "N/A",
-                                      //   style: Theme.of(context)
-                                      //       .textTheme
-                                      //       .titleSmall!
-                                      //       .copyWith(
-                                      //         color: Colors.white,
-                                      //         fontSize: 12,
-                                      //       ),
-                                      // ),
-                                    ],
-                                  ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         );

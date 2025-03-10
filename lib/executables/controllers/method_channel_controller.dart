@@ -52,9 +52,9 @@ class MethodChannelController extends GetxController implements GetxService {
       Map<String, dynamic> data = {
         "app_list": Get.find<AppsController>().lockList.map((e) {
           return {
-            "app_name": e.application!.appName,
+            "app_name": e.application!.name,
             "package_name": e.application!.packageName,
-            "file_path": e.application!.apkFilePath,
+            // "file_path": e.application!.apkFilePath
           };
         }).toList()
       };

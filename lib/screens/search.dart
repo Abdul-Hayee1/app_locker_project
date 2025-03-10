@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_switch/flutter_switch.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
+import 'package:installed_apps/app_info.dart';
 
 import '../executables/controllers/apps_controller.dart';
 import '../services/constant.dart';
@@ -78,7 +79,7 @@ class _SearchPageState extends State<SearchPage> {
                     state.appSearch();
                   },
                   style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                        color: Colors.white,
+                        color: Colors.black,
                       ),
                   decoration: InputDecoration(
                     contentPadding: const EdgeInsets.symmetric(
@@ -89,7 +90,7 @@ class _SearchPageState extends State<SearchPage> {
                     filled: true,
                     hintText: 'Search apps',
                     hintStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          color: Colors.white,
+                          color: Colors.grey[500],
                         ),
                     prefixIcon: const Padding(
                       padding: EdgeInsets.all(12),
@@ -135,30 +136,27 @@ class _SearchPageState extends State<SearchPage> {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Container(
-                                  margin: const EdgeInsets.symmetric(
-                                    vertical: 10,
-                                    horizontal: 14,
-                                  ),
-                                  height: 50,
-                                  width: 50,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: SizedBox()
-                                  //  Image.memory(
-                                  //   state.getAppIcon(
-                                  //     state.searchedApps[index].application!
-                                  //         .appName,
-                                  //   ),
-                                  // ),
-                                  ),
+                                margin: const EdgeInsets.symmetric(
+                                  vertical: 10,
+                                  horizontal: 14,
+                                ),
+                                height: 50,
+                                width: 50,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Image.memory(
+                                  state.getAppIcon(state.searchedApps[index]
+                                      .application! as AppInfo)!,
+                                ),
+                              ),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
                                       state.searchedApps[index].application!
-                                          .appName,
+                                          .name,
                                       style: Theme.of(context)
                                           .textTheme
                                           .bodyLarge!
@@ -198,7 +196,7 @@ class _SearchPageState extends State<SearchPage> {
                                       value: state.selectLockList.contains(state
                                           .searchedApps[index]
                                           .application!
-                                          .appName),
+                                          .name),
                                       borderRadius: 30.0,
                                       padding: 2.0,
                                       showOnOff: false,

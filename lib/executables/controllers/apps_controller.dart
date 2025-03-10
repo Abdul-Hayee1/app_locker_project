@@ -4,6 +4,8 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
+import 'package:installed_apps/app_info.dart';
+import 'package:installed_apps/installed_apps.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:app_lock_flutter/executables/controllers/method_channel_controller.dart';
 import 'package:app_lock_flutter/services/constant.dart';
@@ -18,7 +20,9 @@ class AppsController extends GetxController implements GetxService {
   TextEditingController typeAnswer = TextEditingController();
   TextEditingController checkAnswer = TextEditingController();
   TextEditingController searchApkText = TextEditingController();
-  // List<Application> unLockList = [];
+  // List<Application> unLockList = [];    // deprecated one
+  List<AppInfo> unLockList = []; // alternate
+  List<AppInfo> systemApps = [];
   List<ApplicationDataModel> searchedApps = [];
   List<ApplicationDataModel> lockList = [];
   List<String> selectLockList = [];
@@ -29,6 +33,11 @@ class AppsController extends GetxController implements GetxService {
   int appSearchUpdate = 1;
   int addRemoveToUnlockUpdate = 2;
   int addRemoveToUnlockUpdateSearch = 3;
+
+  void onInit() {
+    super.onInit();
+    getAppsData();
+  }
 
   changeQuestionIndex(index) {
     selectQuestion = index;
@@ -71,49 +80,63 @@ class AppsController extends GetxController implements GetxService {
 
   excludeApps() {
     for (var e in excludedApps) {
-      // unLockList.removeWhere((element) => element.packageName == e);
+      unLockList.removeWhere((element) => element.packageName == e);
     }
   }
 
-  getAppsData() async {
-    // unLockList = await DeviceApps.getInstalledApplications(
-    //   includeAppIcons: true,
-    //   includeSystemApps: true,
-    //   onlyAppsWithLaunchIntent: true,
-    // );
+  // Fetch installed apps and filter them
+  Future<void> getAppsData() async {
+    List<AppInfo> apps = await InstalledApps.getInstalledApps(true, true);
+
+    unLockList = filterLaunchableApps(apps);
+    systemApps = getSystemApps(apps);
+
     excludeApps();
     update();
   }
 
-  addRemoveFromLockedAppsFromSearch(ApplicationData app) {
+  List<AppInfo> filterLaunchableApps(List<AppInfo> apps) {
+    return apps.where((app) => app.packageName.isNotEmpty).toList();
+  }
+
+  List<AppInfo> getSystemApps(List<AppInfo> apps) {
+    return apps.where((app) {
+      return app.packageName.startsWith("com.android") ||
+          app.packageName.startsWith("com.google.android");
+    }).toList();
+  }
+
+  Uint8List? getAppIcon(AppInfo app) {
+    return app.icon;
+  }
+
+  addRemoveFromLockedAppsFromSearch(AppInfo app) {
     addToAppsLoading = true;
     update();
     try {
-      if (selectLockList.contains(app.appName)) {
-        selectLockList.remove(app.appName);
-        lockList.removeWhere(
-            (element) => element.application!.appName == app.appName);
+      if (selectLockList.contains(app.name)) {
+        selectLockList.remove(app.name);
+        lockList
+            .removeWhere((element) => element.application!.name == app.name);
       } else {
         if (lockList.length < 16) {
-          selectLockList.add(app.appName);
+          selectLockList.add(app.name);
           lockList.add(
-            ApplicationDataModel(
-              isLocked: true,
-              application: ApplicationData(
-                apkFilePath: app.apkFilePath,
-                appName: app.appName,
-                category: app.category,
-                dataDir: app.dataDir,
-                enabled: app.enabled,
-                // icon: getAppIcon(app.appName),
-                installTimeMillis: app.installTimeMillis,
-                packageName: app.packageName,
-                systemApp: app.systemApp,
-                updateTimeMillis: app.updateTimeMillis,
-                versionCode: app.versionCode,
-                versionName: app.versionName,
-              ),
-            ),
+            ApplicationDataModel(isLocked: true, application: app
+                // application: ApplicationData(
+                //   apkFilePath: app.apkFilePath,
+                //   appName: app.appName,
+                //   category: app.category,
+                //   dataDir: app.dataDir,
+                //   enabled: app.enabled,
+                //   icon: getAppIcon(app.appName as AppInfo),
+                //   installTimeMillis: app.installTimeMillis,
+                //   packageName: app.packageName,
+                //   systemApp: app.systemApp,
+                //   updateTimeMillis: app.updateTimeMillis,
+                //   versionCode: app.versionCode,
+                //   versionName: app.versionName,
+                ),
           );
         } else {
           Fluttertoast.showToast(
@@ -127,36 +150,34 @@ class AppsController extends GetxController implements GetxService {
     update();
   }
 
-  addToLockedApps(final app, context) async {
-    // change app param daatatype from Application -> final
+  addToLockedApps(AppInfo app, context, Duration duration) async {
     addToAppsLoading = true;
     update([addRemoveToUnlockUpdate]);
     try {
-      if (selectLockList.contains(app.appName)) {
-        selectLockList.remove(app.appName);
-        lockList.removeWhere((em) => em.application!.appName == app.appName);
+      if (selectLockList.contains(app.name)) {
+        selectLockList.remove(app.name);
+        lockList.removeWhere((em) => em.application!.name == app.name);
         log("REMOVE: $selectLockList");
       } else {
         if (lockList.length < 16) {
-          selectLockList.add(app.appName);
+          selectLockList.add(app.name);
           lockList.add(
-            ApplicationDataModel(
-              isLocked: true,
-              application: ApplicationData(
-                apkFilePath: app.apkFilePath,
-                appName: app.appName,
-                category: "${app.category}",
-                dataDir: "${app.dataDir}",
-                enabled: app.enabled,
-                // icon: (app as ApplicationWithIcon).icon,
-                installTimeMillis: "${app.installTimeMillis}",
-                packageName: app.packageName,
-                systemApp: app.systemApp,
-                updateTimeMillis: '${app.updateTimeMillis}',
-                versionCode: '${app.versionCode}',
-                versionName: '${app.versionName}',
-              ),
-            ),
+            ApplicationDataModel(isLocked: true, application: app
+                // application: ApplicationData(
+                //   apkFilePath: app.apkFilePath,
+                //   appName: app.appName,
+                //   category: "${app.category}",
+                //   dataDir: "${app.dataDir}",
+                //   enabled: app.enabled,
+                //   icon: getAppIcon(app.appName as AppInfo),
+                //   installTimeMillis: app.installTimeMillis,
+                //   packageName: app.packageName,
+                //   systemApp: app.systemApp,
+                //   updateTimeMillis: app.updateTimeMillis,
+                //   versionCode: app.versionCode,
+                //   versionName: app.versionName,
+                // ),
+                ),
           );
           log("ADD: $selectLockList", name: "addToLockedApps");
           Get.find<MethodChannelController>().addToLockedAppsMethod();
@@ -181,7 +202,7 @@ class AppsController extends GetxController implements GetxService {
       selectLockList.clear();
       log('${lockList.length}', name: "STORED LIST");
       for (var e in lockList) {
-        selectLockList.add(e.application!.appName);
+        selectLockList.add(e.application!.name);
       }
       log('${lockList.length}-$selectLockList', name: "Locked Apps");
     } catch (e) {
@@ -191,41 +212,20 @@ class AppsController extends GetxController implements GetxService {
     update();
   }
 
-  // Uint8List getAppIcon(String appName) {
-  //   return (unLockList[unLockList.indexWhere((element) {
-  //     return appName == element.appName;
-  //   })] as ApplicationWithIcon)
-  //       .icon;
-  // }
+  // android manifest bhi theek krni hai permissions according to old provided project (self reminder)
 
   appSearch() {
     searchedApps.clear();
     if (searchApkText.text.length > 2) {
-      // for (var e in unLockList) {
-      //   if (e.appName
-      //       .toUpperCase()
-      //       .contains(searchApkText.text.toUpperCase().trim())) {
-      //     searchedApps.add(
-      //       ApplicationDataModel(
-      //         isLocked: null,
-      //         application: ApplicationData(
-      //           apkFilePath: e.apkFilePath,
-      //           appName: e.appName,
-      //           category: "${e.category}",
-      //           dataDir: "${e.dataDir}",
-      //           enabled: e.enabled,
-      //           // icon: (e as ApplicationWithIcon).icon,
-      //           installTimeMillis: "${e.installTimeMillis}",
-      //           packageName: e.packageName,
-      //           systemApp: e.systemApp,
-      //           updateTimeMillis: '${e.updateTimeMillis}',
-      //           versionCode: '${e.versionCode}',
-      //           versionName: '${e.versionName}',
-      //         ),
-      //       ),
-      //     );
-      //   }
-      // }
+      for (var e in unLockList) {
+        if (e.name
+            .toUpperCase()
+            .contains(searchApkText.text.toUpperCase().trim())) {
+          searchedApps.add(
+            ApplicationDataModel(isLocked: null, application: e),
+          );
+        }
+      }
       update([appSearchUpdate]);
     }
   }
