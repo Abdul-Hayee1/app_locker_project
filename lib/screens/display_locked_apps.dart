@@ -1,5 +1,6 @@
+// ignore_for_file: unused_local_variable, prefer_const_constructors
+
 import 'dart:convert';
-import 'dart:math';
 // import 'package:app_lock_flutter/executables/controllers/apps_controller.dart';
 import 'package:app_lock_flutter/models/application_model.dart';
 import 'package:app_lock_flutter/services/constant.dart';

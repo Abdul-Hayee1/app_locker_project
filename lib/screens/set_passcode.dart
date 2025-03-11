@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:app_lock_flutter/executables/controllers/password_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:app_lock_flutter/services/constant.dart';
@@ -5,7 +7,7 @@ import 'package:get/instance_manager.dart';
 import 'package:get/state_manager.dart';
 
 class SetPasscode extends StatefulWidget {
-  const SetPasscode({super.key});
+  const SetPasscode();
 
   @override
   State<SetPasscode> createState() => _SetPasscodeState();

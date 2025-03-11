@@ -1,3 +1,5 @@
+// ignore_for_file: use_key_in_widget_constructors
+
 import 'dart:ui';
 
 import 'package:app_lock_flutter/executables/controllers/method_channel_controller.dart';
@@ -21,7 +23,7 @@ import '../widgets/pass_confirm_dialog.dart';
 import 'set_passcode.dart';
 
 class UnlockedAppScreen extends StatelessWidget {
-  const UnlockedAppScreen({super.key});
+  const UnlockedAppScreen();
 
   @override
   Widget build(BuildContext context) {

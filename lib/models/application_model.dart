@@ -1,13 +1,5 @@
 import 'dart:convert';
-// import 'dart:typed_data';
 import 'package:installed_apps/app_info.dart';
-
-// List<ApplicationDataModel> applicationDataModelFromJson(String str) =>
-//     List<ApplicationDataModel>.from(
-//         json.decode(str).map((x) => ApplicationDataModel.fromJson(x)));
-
-// String applicationDataModelToJson(List<ApplicationDataModel> data) =>
-//     json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
 
 class ApplicationDataModel {
   ApplicationDataModel({
@@ -32,7 +24,7 @@ class ApplicationDataModel {
                 packageName: json["application"]["packageName"],
                 versionName: json["application"]["versionName"],
                 versionCode: json["application"]["versionCode"],
-                builtWith: json["application"]["builtWith"],
+                builtWith: _parseBuiltWith(json["application"]["builtWith"]),
                 installedTimestamp: json["application"]["installedTimestamp"],
               )
             : null,
@@ -52,74 +44,38 @@ class ApplicationDataModel {
                 "packageName": application!.packageName,
                 "versionName": application!.versionName,
                 "versionCode": application!.versionCode,
-                "builtWith": application!.builtWith,
+                "builtWith": _encodeBuiltWith(application!.builtWith),
                 "installedTimestamp": application!.installedTimestamp,
               }
             : null,
         "holdDuration": holdDuration?.inSeconds,
       };
+
+  static BuiltWith _parseBuiltWith(String? builtWithRaw) {
+    if (builtWithRaw == "flutter") {
+      return BuiltWith.flutter;
+    } else if (builtWithRaw == "react_native") {
+      return BuiltWith.react_native;
+    } else if (builtWithRaw == "xamarin") {
+      return BuiltWith.xamarin;
+    } else if (builtWithRaw == "ionic") {
+      return BuiltWith.ionic;
+    }
+    return BuiltWith.native_or_others;
+  }
+
+  static String _encodeBuiltWith(BuiltWith builtWith) {
+    switch (builtWith) {
+      case BuiltWith.flutter:
+        return "flutter";
+      case BuiltWith.react_native:
+        return "react_native";
+      case BuiltWith.xamarin:
+        return "xamarin";
+      case BuiltWith.ionic:
+        return "ionic";
+      case BuiltWith.native_or_others:
+        return "native_or_others";
+    }
+  }
 }
-
-
-
-// class ApplicationData {
-//   ApplicationData({
-//     required this.appName,
-//     this.icon,
-//     required this.apkFilePath,
-//     required this.packageName,
-//     required this.versionName,
-//     required this.versionCode,
-//     required this.dataDir,
-//     required this.systemApp,
-//     required this.installTimeMillis,
-//     required this.updateTimeMillis,
-//     required this.category,
-//     required this.enabled,
-//   });
-
-//   String appName;
-//   Uint8List? icon;
-//   String apkFilePath;
-//   String packageName;
-//   String versionName;
-//   int versionCode;
-//   String dataDir;
-//   bool systemApp;
-//   int installTimeMillis;
-//   int updateTimeMillis;
-//   String category;
-//   bool enabled;
-
-//   factory ApplicationData.fromJson(Map<String, dynamic> json) {
-//     return ApplicationData(
-//       appName: json["appName"] ?? "",
-//       icon: json["icon"] != null ? base64Decode(json["icon"]) : null,
-//       apkFilePath: json["apkFilePath"] ?? "",
-//       packageName: json["packageName"] ?? "",
-//       versionName: json["versionName"] ?? "",
-//       versionCode: json["versionCode"] ?? 0,
-//       dataDir: json["dataDir"] ?? "",
-//       systemApp: json["systemApp"] ?? false,
-//       installTimeMillis: json["installTimeMillis"] ?? 0,
-//       updateTimeMillis: json["updateTimeMillis"] ?? 0,
-//       category: json["category"] ?? "Unknown",
-//       enabled: json["enabled"] ?? false,
-//     );
-//   }
-
-//   Map<String, dynamic> toJson() => {
-//         "appName": appName,
-//         "icon": icon != null ? base64Encode(icon!) : null,
-//         "apkFilePath": apkFilePath,
-//         "packageName": packageName,
-//         "versionName": versionName,
-//         "versionCode": versionCode,
-//         "dataDir": dataDir,
-//         "systemApp": systemApp,
-//         "installTimeMillis": installTimeMillis,
-//         "updateTimeMillis": updateTimeMillis,
-//         "category": category,
-//         "enabled": enabled,
-//       };
-// }

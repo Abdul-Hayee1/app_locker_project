@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:typed_data';
@@ -131,6 +133,7 @@ class AppsController extends GetxController implements GetxService {
     List<String> storedList =
         lockList.map((app) => jsonEncode(app.toJson())).toList();
     await prefs.setStringList(AppConstants.appsKey, storedList);
+    log("Saved Locked Apps: $storedList");
   }
 
   addRemoveFromLockedAppsFromSearch(AppInfo app) {
@@ -162,12 +165,18 @@ class AppsController extends GetxController implements GetxService {
   addToLockedApps(AppInfo app, context, Duration duration) async {
     addToAppsLoading = true;
     update([addRemoveToUnlockUpdate]);
+    print("Starting addToLockedApps...");
 
     try {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
+      print("SharedPreferences loaded.");
+
       List<String> storedList = prefs.getStringList(AppConstants.appsKey) ?? [];
+      print("Stored list fetched: $storedList");
 
       if (selectLockList.contains(app.name)) {
+        print("App ${app.name} found in locked list, removing...");
+
         // If app exists, remove it
         selectLockList.remove(app.name);
         lockList.removeWhere((em) => em.application!.name == app.name);
@@ -176,8 +185,10 @@ class AppsController extends GetxController implements GetxService {
           return decoded["application"]["name"] == app.name;
         });
 
-        log("REMOVE: $selectLockList");
+        print("Test Locked apps REMOVE: $selectLockList");
       } else {
+        print("App ${app.name} not found, adding...");
+
         if (lockList.length < 16) {
           // If not in list, add it
           selectLockList.add(app.name);
@@ -190,22 +201,26 @@ class AppsController extends GetxController implements GetxService {
 
           // Save the new app to SharedPreferences
           storedList.add(jsonEncode(newApp.toJson()));
-          log("ADD: $selectLockList", name: "addToLockedApps");
+          print("Test Locked apps ADD: $selectLockList addToLockedApps");
 
           Get.find<MethodChannelController>().addToLockedAppsMethod();
         } else {
           Fluttertoast.showToast(
               msg: "You can add only 16 apps in the locked list");
+          print("Cannot add more apps. Locked list limit reached.");
         }
       }
 
       await saveLockedApps();
+      print("Locked apps saved to SharedPreferences.");
     } catch (e) {
       log("-------$e", name: "addToLockedApps");
+      print("Error encountered: $e");
     }
 
     addToAppsLoading = false;
     update([addRemoveToUnlockUpdate]);
+    print("Finished addToLockedApps.");
   }
 
   Future<void> handleAppLaunch(AppInfo app) async {

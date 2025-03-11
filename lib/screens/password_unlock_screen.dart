@@ -1,15 +1,16 @@
+// ignore_for_file: use_key_in_widget_constructors
+
 import 'package:app_lock_flutter/executables/controllers/password_controller.dart';
 import 'package:app_lock_flutter/screens/home.dart';
 import 'package:app_lock_flutter/services/constant.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
-import 'package:get/state_manager.dart';
 
 class PasswordUnlockScreen extends StatelessWidget {
   final PasswordController _passwordController = Get.find<PasswordController>();
 
-  PasswordUnlockScreen({super.key});
+  PasswordUnlockScreen();
 
   @override
   Widget build(BuildContext context) {

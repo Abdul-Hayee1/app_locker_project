@@ -1,3 +1,5 @@
+// ignore_for_file: unused_import, deprecated_member_use
+
 import 'dart:developer';
 import 'package:app_lock_flutter/models/application_model.dart';
 import 'package:flutter/material.dart';
