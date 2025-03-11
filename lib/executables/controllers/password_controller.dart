@@ -53,6 +53,11 @@ class PasswordController extends GetxController implements GetxService {
     }
   }
 
+  void clearPasscode() {
+    passcode = "";
+    update();
+  }
+
   clearData() {
     isConfirm = false;
     passcode = "";

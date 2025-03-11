@@ -92,6 +92,7 @@ class AppsController extends GetxController implements GetxService {
     systemApps = getSystemApps(apps);
 
     excludeApps();
+    getLockedApps();
     update();
   }
 
@@ -122,21 +123,7 @@ class AppsController extends GetxController implements GetxService {
         if (lockList.length < 16) {
           selectLockList.add(app.name);
           lockList.add(
-            ApplicationDataModel(isLocked: true, application: app
-                // application: ApplicationData(
-                //   apkFilePath: app.apkFilePath,
-                //   appName: app.appName,
-                //   category: app.category,
-                //   dataDir: app.dataDir,
-                //   enabled: app.enabled,
-                //   icon: getAppIcon(app.appName as AppInfo),
-                //   installTimeMillis: app.installTimeMillis,
-                //   packageName: app.packageName,
-                //   systemApp: app.systemApp,
-                //   updateTimeMillis: app.updateTimeMillis,
-                //   versionCode: app.versionCode,
-                //   versionName: app.versionName,
-                ),
+            ApplicationDataModel(isLocked: true, application: app),
           );
         } else {
           Fluttertoast.showToast(
@@ -162,22 +149,7 @@ class AppsController extends GetxController implements GetxService {
         if (lockList.length < 16) {
           selectLockList.add(app.name);
           lockList.add(
-            ApplicationDataModel(isLocked: true, application: app
-                // application: ApplicationData(
-                //   apkFilePath: app.apkFilePath,
-                //   appName: app.appName,
-                //   category: "${app.category}",
-                //   dataDir: "${app.dataDir}",
-                //   enabled: app.enabled,
-                //   icon: getAppIcon(app.appName as AppInfo),
-                //   installTimeMillis: app.installTimeMillis,
-                //   packageName: app.packageName,
-                //   systemApp: app.systemApp,
-                //   updateTimeMillis: app.updateTimeMillis,
-                //   versionCode: app.versionCode,
-                //   versionName: app.versionName,
-                // ),
-                ),
+            ApplicationDataModel(isLocked: true, application: app),
           );
           log("ADD: $selectLockList", name: "addToLockedApps");
           Get.find<MethodChannelController>().addToLockedAppsMethod();
@@ -210,6 +182,34 @@ class AppsController extends GetxController implements GetxService {
     }
 
     update();
+  }
+
+  Future<void> handleAppLaunch(AppInfo app) async {
+    if (selectLockList.contains(app.name)) {
+      // Show lock screen if app is locked
+      showLockScreen(app.packageName);
+    } else {
+      // Otherwise, launch the app normally
+      InstalledApps.startApp(app.packageName);
+    }
+  }
+
+  void showLockScreen(String packageName) {
+    Get.dialog(
+      AlertDialog(
+        title: Text("App Locked"),
+        content: Text("This app is locked. Enter passcode to continue."),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Get.back(); // Close the lock screen
+            },
+            child: Text("Unlock"),
+          )
+        ],
+      ),
+      barrierDismissible: false,
+    );
   }
 
   // android manifest bhi theek krni hai permissions according to old provided project (self reminder)

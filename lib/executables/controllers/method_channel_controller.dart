@@ -49,17 +49,18 @@ class MethodChannelController extends GetxController implements GetxService {
 
   addToLockedAppsMethod() async {
     try {
-      Map<String, dynamic> data = {
-        "app_list": Get.find<AppsController>().lockList.map((e) {
-          return {
-            "app_name": e.application!.name,
-            "package_name": e.application!.packageName,
-            // "file_path": e.application!.apkFilePath
-          };
-        }).toList()
-      };
-      await setPassword();
-      await platform.invokeMethod('addToLockedApps', data).then((value) {
+      // Prepare the app list data
+      List<Map<String, String>> appList =
+          Get.find<AppsController>().lockList.map((e) {
+        return {
+          "app_name": e.application!.name,
+          "package_name": e.application!.packageName,
+        };
+      }).toList();
+
+      // Send the data to the native side
+      await platform
+          .invokeMethod('addToLockedApps', {"app_list": appList}).then((value) {
         log("$value", name: "addToLockedApps CALLED");
       });
     } on PlatformException catch (e) {

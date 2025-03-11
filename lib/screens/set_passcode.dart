@@ -5,7 +5,7 @@ import 'package:get/instance_manager.dart';
 import 'package:get/state_manager.dart';
 
 class SetPasscode extends StatefulWidget {
-  const SetPasscode({Key? key}) : super(key: key);
+  const SetPasscode({super.key});
 
   @override
   State<SetPasscode> createState() => _SetPasscodeState();
