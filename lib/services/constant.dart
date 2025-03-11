@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'package:app_lock_flutter/models/application_model.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -202,7 +203,7 @@ class AppConstants {
   static const String theme = 'theme';
   static const String token = 'user_app_token';
   static const String userId = 'user_app_id';
-  static const String lockedApps = 'lockedApps';
+  static const String appsKey = 'appsKey';
 
   String parseHtmlString(String htmlString) {
     final document = parse(htmlString);

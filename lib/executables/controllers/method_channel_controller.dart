@@ -50,7 +50,7 @@ class MethodChannelController extends GetxController implements GetxService {
   addToLockedAppsMethod() async {
     try {
       // Prepare the app list data
-      List<Map<String, String>> appList =
+      List<Map<String, dynamic>> appList =
           Get.find<AppsController>().lockList.map((e) {
         return {
           "app_name": e.application!.name,

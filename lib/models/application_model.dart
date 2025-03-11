@@ -1,13 +1,13 @@
 import 'dart:convert';
-import 'dart:typed_data';
+// import 'dart:typed_data';
 import 'package:installed_apps/app_info.dart';
 
-List<ApplicationDataModel> applicationDataModelFromJson(String str) =>
-    List<ApplicationDataModel>.from(
-        json.decode(str).map((x) => ApplicationDataModel.fromJson(x)));
+// List<ApplicationDataModel> applicationDataModelFromJson(String str) =>
+//     List<ApplicationDataModel>.from(
+//         json.decode(str).map((x) => ApplicationDataModel.fromJson(x)));
 
-String applicationDataModelToJson(List<ApplicationDataModel> data) =>
-    json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
+// String applicationDataModelToJson(List<ApplicationDataModel> data) =>
+//     json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
 
 class ApplicationDataModel {
   ApplicationDataModel({

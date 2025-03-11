@@ -1,4 +1,4 @@
-import 'package:app_lock_flutter/models/application_model.dart';
+// import 'package:app_lock_flutter/models/application_model.dart';
 import 'package:flutter/material.dart';
 import 'package:app_lock_flutter/executables/controllers/apps_controller.dart';
 import 'package:get/get.dart';
@@ -21,9 +21,9 @@ void voidAddToLockedAppsModalSheet(BuildContext context, AppInfo app) {
 }
 
 class _AddToLockedListModal extends StatefulWidget {
-  final AppInfo app;
+  final AppInfo application;
 
-  const _AddToLockedListModal(this.app, {Key? key}) : super(key: key);
+  const _AddToLockedListModal(this.application);
 
   @override
   State<_AddToLockedListModal> createState() => _AddToLockedListModalState();
@@ -117,8 +117,8 @@ class _AddToLockedListModalState extends State<_AddToLockedListModal> {
           ElevatedButton(
             onPressed: () {
               final appsController = Get.find<AppsController>();
-              appsController.addToLockedApps(
-                  widget.app, context, Duration(seconds: durationInSeconds));
+              appsController.addToLockedApps(widget.application, context,
+                  Duration(seconds: durationInSeconds));
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).primaryColor,

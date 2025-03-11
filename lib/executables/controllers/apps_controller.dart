@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:typed_data';
 // import 'package:device_apps/device_apps.dart';
@@ -37,6 +38,7 @@ class AppsController extends GetxController implements GetxService {
   void onInit() {
     super.onInit();
     getAppsData();
+    loadLockedApps();
   }
 
   changeQuestionIndex(index) {
@@ -84,7 +86,6 @@ class AppsController extends GetxController implements GetxService {
     }
   }
 
-  // Fetch installed apps and filter them
   Future<void> getAppsData() async {
     List<AppInfo> apps = await InstalledApps.getInstalledApps(true, true);
 
@@ -92,7 +93,7 @@ class AppsController extends GetxController implements GetxService {
     systemApps = getSystemApps(apps);
 
     excludeApps();
-    getLockedApps();
+    loadLockedApps();
     update();
   }
 
@@ -109,6 +110,27 @@ class AppsController extends GetxController implements GetxService {
 
   Uint8List? getAppIcon(AppInfo app) {
     return app.icon;
+  }
+
+  Future<void> loadLockedApps() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String> storedList = prefs.getStringList(AppConstants.appsKey) ?? [];
+
+    lockList = storedList
+        .map((json) => ApplicationDataModel.fromJson(jsonDecode(json)))
+        .toList();
+
+    selectLockList =
+        lockList.map((app) => app.application!.name).toList(); // Sync names
+
+    update([addRemoveToUnlockUpdate]);
+  }
+
+  Future<void> saveLockedApps() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String> storedList =
+        lockList.map((app) => jsonEncode(app.toJson())).toList();
+    await prefs.setStringList(AppConstants.appsKey, storedList);
   }
 
   addRemoveFromLockedAppsFromSearch(AppInfo app) {
@@ -140,48 +162,50 @@ class AppsController extends GetxController implements GetxService {
   addToLockedApps(AppInfo app, context, Duration duration) async {
     addToAppsLoading = true;
     update([addRemoveToUnlockUpdate]);
+
     try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      List<String> storedList = prefs.getStringList(AppConstants.appsKey) ?? [];
+
       if (selectLockList.contains(app.name)) {
+        // If app exists, remove it
         selectLockList.remove(app.name);
         lockList.removeWhere((em) => em.application!.name == app.name);
+        storedList.removeWhere((json) {
+          final decoded = jsonDecode(json);
+          return decoded["application"]["name"] == app.name;
+        });
+
         log("REMOVE: $selectLockList");
       } else {
         if (lockList.length < 16) {
+          // If not in list, add it
           selectLockList.add(app.name);
-          lockList.add(
-            ApplicationDataModel(isLocked: true, application: app),
+          ApplicationDataModel newApp = ApplicationDataModel(
+            isLocked: true,
+            application: app,
+            holdDuration: duration,
           );
+          lockList.add(newApp);
+
+          // Save the new app to SharedPreferences
+          storedList.add(jsonEncode(newApp.toJson()));
           log("ADD: $selectLockList", name: "addToLockedApps");
+
           Get.find<MethodChannelController>().addToLockedAppsMethod();
         } else {
           Fluttertoast.showToast(
-              msg: "You can add only 16 apps in locked list");
+              msg: "You can add only 16 apps in the locked list");
         }
       }
+
+      await saveLockedApps();
     } catch (e) {
       log("-------$e", name: "addToLockedApps");
     }
-    prefs.setString(
-        AppConstants.lockedApps, applicationDataModelToJson(lockList));
+
     addToAppsLoading = false;
     update([addRemoveToUnlockUpdate]);
-  }
-
-  getLockedApps() {
-    try {
-      lockList = applicationDataModelFromJson(
-          prefs.getString(AppConstants.lockedApps) ?? '');
-      selectLockList.clear();
-      log('${lockList.length}', name: "STORED LIST");
-      for (var e in lockList) {
-        selectLockList.add(e.application!.name);
-      }
-      log('${lockList.length}-$selectLockList', name: "Locked Apps");
-    } catch (e) {
-      log("-------$e", name: "getLockedApps");
-    }
-
-    update();
   }
 
   Future<void> handleAppLaunch(AppInfo app) async {
@@ -197,22 +221,20 @@ class AppsController extends GetxController implements GetxService {
   void showLockScreen(String packageName) {
     Get.dialog(
       AlertDialog(
-        title: Text("App Locked"),
-        content: Text("This app is locked. Enter passcode to continue."),
+        title: const Text("App Locked"),
+        content: const Text("This app is locked. Enter passcode to continue."),
         actions: [
           TextButton(
             onPressed: () {
               Get.back(); // Close the lock screen
             },
-            child: Text("Unlock"),
+            child: const Text("Unlock"),
           )
         ],
       ),
       barrierDismissible: false,
     );
   }
-
-  // android manifest bhi theek krni hai permissions according to old provided project (self reminder)
 
   appSearch() {
     searchedApps.clear();

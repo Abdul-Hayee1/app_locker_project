@@ -2,14 +2,14 @@ import 'dart:ui';
 
 import 'package:app_lock_flutter/executables/controllers/method_channel_controller.dart';
 import 'package:app_lock_flutter/executables/controllers/password_controller.dart';
-import 'package:app_lock_flutter/models/application_model.dart';
+// import 'package:app_lock_flutter/models/application_model.dart';
 import 'package:app_lock_flutter/screens/add_to_lockedList_sheet.dart';
 import 'package:app_lock_flutter/screens/display_locked_apps.dart';
 import 'package:app_lock_flutter/widgets/confirmation_dialog.dart';
 // import 'package:device_apps/device_apps.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_switch/flutter_switch.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+// import 'package:flutter_switch/flutter_switch.dart';
+// import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/instance_manager.dart';
 import 'package:get/state_manager.dart';
 import 'package:app_lock_flutter/screens/search.dart';
@@ -21,7 +21,7 @@ import '../widgets/pass_confirm_dialog.dart';
 import 'set_passcode.dart';
 
 class UnlockedAppScreen extends StatelessWidget {
-  const UnlockedAppScreen({Key? key}) : super(key: key);
+  const UnlockedAppScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

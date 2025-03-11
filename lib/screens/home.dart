@@ -31,7 +31,7 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
       Get.find<AppsController>().getAppsData();
-      Get.find<AppsController>().getLockedApps();
+      Get.find<AppsController>().loadLockedApps();
       Get.find<PermissionController>()
           .getPermission(Permission.ignoreBatteryOptimizations);
       getPermissions();
