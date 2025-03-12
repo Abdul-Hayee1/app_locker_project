@@ -1,6 +1,7 @@
 // import 'package:app_lock_flutter/models/application_model.dart';
 import 'package:flutter/material.dart';
 import 'package:app_lock_flutter/executables/controllers/apps_controller.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:installed_apps/app_info.dart';
 
@@ -119,6 +120,15 @@ class _AddToLockedListModalState extends State<_AddToLockedListModal> {
               final appsController = Get.find<AppsController>();
               appsController.addToLockedApps(widget.application, context,
                   Duration(seconds: durationInSeconds));
+              Fluttertoast.showToast(
+                msg: "Added successfully",
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.BOTTOM,
+                backgroundColor: Colors.black54,
+                textColor: Colors.white,
+                fontSize: 16.0,
+              );
+              // Removing this app from unLockedList
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).primaryColor,
