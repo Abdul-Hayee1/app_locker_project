@@ -5,6 +5,7 @@ import 'dart:developer';
 import 'dart:typed_data';
 // import 'package:device_apps/device_apps.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:installed_apps/app_info.dart';
@@ -32,6 +33,7 @@ class AppsController extends GetxController implements GetxService {
   bool addToAppsLoading = false;
 
   List<String> excludedApps = ["com.android.settings"];
+  static const eventChannel = EventChannel('com.example.app_locker/events');
 
   int appSearchUpdate = 1;
   int addRemoveToUnlockUpdate = 2;
@@ -41,6 +43,13 @@ class AppsController extends GetxController implements GetxService {
     super.onInit();
     getAppsData();
     loadLockedApps();
+    _listenToEvents();
+  }
+
+  void _listenToEvents() {
+    eventChannel.receiveBroadcastStream().listen((event) {
+      print("Testing AppLocker App opened: $event");
+    });
   }
 
   changeQuestionIndex(index) {
