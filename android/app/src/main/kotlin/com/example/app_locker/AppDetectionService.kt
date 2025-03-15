@@ -25,7 +25,6 @@ class AppDetectionService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        // Start monitoring app usage using AccessibilityService
         startAppUsageMonitoring()
         return START_STICKY
     }
@@ -43,7 +42,6 @@ class AppDetectionService : Service() {
     }
 
     private fun createNotification(): Notification {
-        // Create an intent for the stop action
         val stopIntent = Intent(this, StopServiceReceiver::class.java)
         val stopPendingIntent = PendingIntent.getBroadcast(
             this,
@@ -52,13 +50,12 @@ class AppDetectionService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        // Build the notification with the stop action
         return NotificationCompat.Builder(this, "app_locker_channel")
             .setContentTitle("App Locker")
             .setContentText("Monitoring app usage...")
             .setSmallIcon(R.mipmap.ic_launcher)
             .addAction(
-                R.drawable.stop_icon, // Use your stop icon here
+                R.drawable.stop_icon,
                 "Stop",
                 stopPendingIntent
             )
@@ -66,7 +63,6 @@ class AppDetectionService : Service() {
     }
 
     private fun startAppUsageMonitoring() {
-        // Start the AccessibilityService for real-time app launch detection
         val intent = Intent(this, AppDetectionAccessibilityService::class.java)
         startService(intent)
         Log.d("AppDetectionService", "AccessibilityService started for app usage monitoring")

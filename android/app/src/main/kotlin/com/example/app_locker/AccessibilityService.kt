@@ -6,8 +6,19 @@ import android.util.Log
 
 class AppDetectionAccessibilityService : AccessibilityService() {
 
+    private val openedApps = mutableSetOf<String>()
+    private var currentForegroundApp: String? = null
+    private val ignoredPackages = setOf(
+        "com.android.systemui",
+        "com.google.android.googlequicksearchbox",
+        "com.example.app_locker",
+        "com.transsion.XOSLauncher",
+        "com.sec.android.app.launcher", // Samsung Launcher
+        "com.google.android.apps.nexuslauncher",
+        "com.android.launcher3" // Pixel Launcher
+    )
+
     override fun onServiceConnected() {
-        // Configure the service
         Log.d("AppDetectionAccessibilityService", "Service connected")
     }
 
@@ -15,24 +26,28 @@ class AppDetectionAccessibilityService : AccessibilityService() {
         event?.let {
             if (it.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
                 val packageName = it.packageName?.toString()
-                packageName?.let { pkg ->
-                    Log.d("AppDetectionAccessibilityService", "App opened: $pkg")
 
-                    // Check if the app is unlocked and within the cooldown period
-                    val currentTime = System.currentTimeMillis()
-                    val cooldownPeriod = 1000L // 1 second cooldown
-
-                    if (!LockScreenActivity.isUnlocked) {
-                        // Send this information to Flutter using EventChannel
-                        MainActivity.instance?.sendAppUsageEvent(pkg)
-                    }
+                if (packageName == null || ignoredPackages.contains(packageName)) {
+                    return
                 }
+
+                if (packageName == currentForegroundApp) {
+                    return
+                }
+
+                if (!LockScreenActivity.isUnlocked && !openedApps.contains(packageName)) {
+                    MainActivity.instance?.sendAppUsageEvent(packageName)
+                    return
+                }
+
+                currentForegroundApp = packageName
+                openedApps.add(packageName)
+                openedApps.removeIf { it != currentForegroundApp }
             }
         }
     }
 
     override fun onInterrupt() {
-        // Handle service interruption
         Log.d("AppDetectionAccessibilityService", "Service interrupted")
     }
 }

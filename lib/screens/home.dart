@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_print, use_build_context_synchronously, unused_import
+// ignore_for_file: use_build_context_synchronously, avoid_print
 
 import 'package:app_lock_flutter/models/application_model.dart';
 import 'package:flutter/material.dart';
@@ -10,7 +10,6 @@ import 'package:app_lock_flutter/executables/controllers/permission_controller.d
 import 'package:app_lock_flutter/executables/controllers/apps_controller.dart';
 import 'package:app_lock_flutter/screens/unlocked_apps.dart';
 import 'package:app_lock_flutter/widgets/ask_permission_dialog.dart';
-import 'package:system_alert_window/system_alert_window.dart';
 
 class AppLockerService {
   static const EventChannel _eventChannel =
@@ -30,7 +29,7 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   static const serviceChannel = MethodChannel('com.example.app_locker/service');
   static const accessibilityChannel =
       MethodChannel('com.example.app_locker/accessibility');
@@ -46,6 +45,17 @@ class _HomePageState extends State<HomePage> {
       print("Service started successfully.");
     } on PlatformException catch (e) {
       print("Failed to start service: '${e.message}'.");
+    }
+  }
+
+  Future<void> _stopService() async {
+    print("Stopping service...");
+
+    try {
+      await serviceChannel.invokeMethod('stopService');
+      print("Service stopped successfully.");
+    } on PlatformException catch (e) {
+      print("Failed to stop service: '${e.message}'.");
     }
   }
 
@@ -113,6 +123,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
       Get.find<AppsController>().getAppsData();
       Get.find<AppsController>().loadLockedApps();
@@ -127,6 +138,19 @@ class _HomePageState extends State<HomePage> {
         _checkIfAppIsLocked(packageName);
       });
     });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkAccessibilityService();
+    }
   }
 
   @override
@@ -146,23 +170,137 @@ class _HomePageState extends State<HomePage> {
           if (!_isAccessibilityEnabled)
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: ElevatedButton(
-                onPressed: () async {
-                  await _requestAccessibilityServicePermission();
-                  await _checkAccessibilityService();
-                },
-                child: const Text(
-                  'Enable Accessibility Service',
-                  style: TextStyle(color: Colors.black),
-                ),
+              child: Row(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: Theme.of(context).primaryColorDark,
+                      ),
+                    ),
+                    child: IconButton(
+                      onPressed: () async {
+                        await showDialog(
+                          context: context,
+                          builder: (context) {
+                            return AlertDialog(
+                              title: const Text("Stop Service"),
+                              content: const Text(
+                                  "Are you sure you want to stop the service?"),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                  },
+                                  child: const Text(
+                                    "Cancel",
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ),
+                                TextButton(
+                                  onPressed: () async {
+                                    await _stopService();
+                                    Navigator.pop(context);
+                                  },
+                                  child: const Text(
+                                    "Stop",
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                      icon: Icon(
+                        Icons.stop_circle_outlined,
+                        color: Theme.of(context).primaryColor,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        await _requestAccessibilityServicePermission();
+                      },
+                      child: const Text(
+                        'Enable Accessibility Service',
+                        style: TextStyle(color: Colors.black),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           if (_isAccessibilityEnabled)
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Text(
-                'Accessibility Service is Enabled',
-                style: TextStyle(color: Colors.green, fontSize: 16),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: Theme.of(context).primaryColorDark,
+                      ),
+                    ),
+                    child: IconButton(
+                      onPressed: () async {
+                        await showDialog(
+                          context: context,
+                          builder: (context) {
+                            return AlertDialog(
+                              title: const Text("Stop Service"),
+                              content: const Text(
+                                  "Are you sure you want to stop the service?"),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                  },
+                                  child: const Text(
+                                    "Cancel",
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ),
+                                TextButton(
+                                  onPressed: () async {
+                                    await _stopService();
+                                    Navigator.pop(context);
+                                  },
+                                  child: const Text(
+                                    "Stop",
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                      icon: Icon(
+                        Icons.stop_circle_outlined,
+                        color: Theme.of(context).primaryColor,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  const Expanded(
+                    child: Text(
+                      'Accessibility Service is Enabled',
+                      style: TextStyle(color: Colors.green, fontSize: 16),
+                    ),
+                  ),
+                ],
               ),
             ),
           const Expanded(
