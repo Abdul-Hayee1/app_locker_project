@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_print
+// ignore_for_file: avoid_print, annotate_overrides
 
 import 'dart:convert';
 import 'dart:developer';
@@ -32,7 +32,10 @@ class AppsController extends GetxController implements GetxService {
   List<String> selectLockList = [];
   bool addToAppsLoading = false;
 
-  List<String> excludedApps = ["com.android.settings"];
+  List<String> excludedApps = [
+    "com.android.settings",
+    "com.example.app_locker",
+  ];
   static const eventChannel = EventChannel('com.example.app_locker/events');
 
   int appSearchUpdate = 1;

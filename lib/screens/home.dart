@@ -1,5 +1,6 @@
-// ignore_for_file: avoid_print, use_build_context_synchronously
+// ignore_for_file: avoid_print, use_build_context_synchronously, unused_import
 
+import 'package:app_lock_flutter/models/application_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -38,10 +39,42 @@ class _HomePageState extends State<HomePage> {
   bool _isAccessibilityEnabled = false;
 
   Future<void> _startService() async {
+    print("Starting service...");
+
     try {
       await serviceChannel.invokeMethod('startService');
+      print("Service started successfully.");
     } on PlatformException catch (e) {
       print("Failed to start service: '${e.message}'.");
+    }
+  }
+
+  void _checkIfAppIsLocked(String packageName) {
+    print("Checking if app is locked for package: $packageName");
+
+    final lockList = Get.find<AppsController>().lockList;
+    final lockedApp = lockList.firstWhere(
+      (app) => app.application!.packageName == packageName,
+      orElse: () => ApplicationDataModel(),
+    );
+
+    if (lockedApp.isLocked == true) {
+      print("App is locked. Showing lock screen...");
+      _showLockScreen(lockedApp.holdDuration ?? const Duration(seconds: 3));
+    } else {
+      print("App is not locked.");
+    }
+  }
+
+  void _showLockScreen(Duration duration) async {
+    try {
+      await serviceChannel.invokeMethod(
+        'showLockScreen',
+        {'duration': duration.inSeconds.toInt()},
+      );
+      print("Value check: ${duration.inSeconds.toInt()}");
+    } on PlatformException catch (e) {
+      print("Failed to show lock screen: '${e.message}'.");
     }
   }
 
@@ -94,56 +127,6 @@ class _HomePageState extends State<HomePage> {
         _checkIfAppIsLocked(packageName);
       });
     });
-  }
-
-  void _checkIfAppIsLocked(String packageName) {
-    final lockList = Get.find<AppsController>().lockList;
-    final isLocked =
-        lockList.any((app) => app.application!.packageName == packageName);
-    if (isLocked) {
-      _showLockScreen();
-    }
-  }
-
-  void _showLockScreen() async {
-    if (!(await SystemAlertWindow.checkPermissions() ?? false)) {
-      await SystemAlertWindow.requestPermissions();
-    }
-
-    SystemAlertWindow.showSystemWindow(
-      header: SystemWindowHeader(
-        title: SystemWindowText(text: "App Locked", fontSize: 16),
-      ),
-      body: SystemWindowBody(
-        rows: [
-          EachRow(
-            columns: [
-              EachColumn(
-                text: SystemWindowText(
-                  text: "This app is locked. Please unlock to continue.",
-                  fontSize: 14,
-                  textColor: Colors.black,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-      footer: SystemWindowFooter(
-        buttons: [
-          SystemWindowButton(
-            text: SystemWindowText(text: "Unlock", fontSize: 14),
-            tag: "unlock",
-            width: 0,
-            height: SystemWindowButton.WRAP_CONTENT,
-          ),
-        ],
-      ),
-      margin: SystemWindowMargin(left: 0, right: 0, top: 0, bottom: 0),
-      gravity: SystemWindowGravity.TOP,
-      width: MediaQuery.of(context).size.width.toInt(),
-      height: MediaQuery.of(context).size.height.toInt(),
-    );
   }
 
   @override

@@ -1,0 +1,26 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/black">
+
+    <TextView
+        android:id="@+id/lock_message"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="App Locked"
+        android:textColor="@android:color/white"
+        android:textSize="24sp"
+        android:layout_centerInParent="true"/>
+
+    <TextView
+        android:id="@+id/unlock_instructions"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Hold Volume Button for a while to Unlock"
+        android:textColor="@android:color/white"
+        android:textSize="16sp"
+        android:layout_below="@id/lock_message"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="16dp"/>
+
+</RelativeLayout>

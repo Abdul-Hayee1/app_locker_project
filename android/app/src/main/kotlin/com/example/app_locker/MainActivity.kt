@@ -45,6 +45,18 @@ class MainActivity : FlutterActivity() {
                     stopService(Intent(this, AppDetectionService::class.java))
                     result.success("Service stopped")
                 }
+                "showLockScreen" -> {
+                    // Get the duration from the Flutter call
+                    val durationInSeconds = call.argument<Int>("duration") ?: 3 // Default to 3 seconds
+                    // Convert to Long if needed
+                    val duration = durationInSeconds.toLong()
+                    // Launch the LockScreenActivity with the duration
+                    val intent = Intent(this, LockScreenActivity::class.java)
+                    intent.putExtra("duration", duration)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    startActivity(intent)
+                    result.success("Lock screen shown")
+                }
                 else -> result.notImplemented()
             }
         }

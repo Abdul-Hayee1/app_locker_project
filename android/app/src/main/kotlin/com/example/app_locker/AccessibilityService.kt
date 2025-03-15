@@ -17,8 +17,15 @@ class AppDetectionAccessibilityService : AccessibilityService() {
                 val packageName = it.packageName?.toString()
                 packageName?.let { pkg ->
                     Log.d("AppDetectionAccessibilityService", "App opened: $pkg")
-                    // Send this information to Flutter using EventChannel
-                    MainActivity.instance?.sendAppUsageEvent(pkg)
+
+                    // Check if the app is unlocked and within the cooldown period
+                    val currentTime = System.currentTimeMillis()
+                    val cooldownPeriod = 1000L // 1 second cooldown
+
+                    if (!LockScreenActivity.isUnlocked) {
+                        // Send this information to Flutter using EventChannel
+                        MainActivity.instance?.sendAppUsageEvent(pkg)
+                    }
                 }
             }
         }
