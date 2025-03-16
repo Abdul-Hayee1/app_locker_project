@@ -59,9 +59,6 @@
                 android:name="android.accessibilityservice"
                 android:resource="@xml/accessibility_service_config" />
         </service>
-
-        <!-- Receiver -->
-        <receiver android:name=".StopServiceReceiver" />
         
         <!-- Flutter Embedding -->
         <meta-data

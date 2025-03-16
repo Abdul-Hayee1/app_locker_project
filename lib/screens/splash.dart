@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_const_constructors, use_build_context_synchronously
+
 import 'package:app_lock_flutter/screens/password_unlock_screen.dart';
 import 'package:app_lock_flutter/services/constant.dart';
 import 'package:flutter/material.dart';

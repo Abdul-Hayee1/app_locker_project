@@ -13,9 +13,9 @@ class AppDetectionAccessibilityService : AccessibilityService() {
         "com.google.android.googlequicksearchbox",
         "com.example.app_locker",
         "com.transsion.XOSLauncher",
-        "com.sec.android.app.launcher", // Samsung Launcher
+        "com.sec.android.app.launcher",
         "com.google.android.apps.nexuslauncher",
-        "com.android.launcher3" // Pixel Launcher
+        "com.android.launcher3" 
     )
 
     override fun onServiceConnected() {

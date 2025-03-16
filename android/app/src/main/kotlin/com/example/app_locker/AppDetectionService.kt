@@ -42,23 +42,10 @@ class AppDetectionService : Service() {
     }
 
     private fun createNotification(): Notification {
-        val stopIntent = Intent(this, StopServiceReceiver::class.java)
-        val stopPendingIntent = PendingIntent.getBroadcast(
-            this,
-            0,
-            stopIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
         return NotificationCompat.Builder(this, "app_locker_channel")
             .setContentTitle("App Locker")
             .setContentText("Monitoring app usage...")
             .setSmallIcon(R.mipmap.ic_launcher)
-            .addAction(
-                R.drawable.stop_icon,
-                "Stop",
-                stopPendingIntent
-            )
             .build()
     }
 

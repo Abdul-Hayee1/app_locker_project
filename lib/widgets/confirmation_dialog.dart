@@ -1,6 +1,22 @@
+// ignore_for_file: avoid_print, deprecated_member_use, use_build_context_synchronously
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class ConfirmationDialog extends StatelessWidget {
+  static const serviceChannel = MethodChannel('com.example.app_locker/service');
+
+  Future<void> _stopService() async {
+    print("Stopping service...");
+
+    try {
+      await serviceChannel.invokeMethod('stopService');
+      print("Service stopped successfully.");
+    } on PlatformException catch (e) {
+      print("Faile    d to stop service: '${e.message}'.");
+    }
+  }
+
   final String? heading, bodyText, button1Text, button2Text;
   final Widget? headingWidget;
   final TextAlign? bodyTextAlign;
@@ -127,7 +143,8 @@ class ConfirmationDialog extends StatelessWidget {
                             ),
                             if (okButton == null)
                               GestureDetector(
-                                onTap: () {
+                                onTap: () async {
+                                  await _stopService();
                                   Navigator.pop(context, true);
                                 },
                                 child: Container(

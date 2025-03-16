@@ -1,8 +1,5 @@
-// ignore_for_file: use_key_in_widget_constructors
+// ignore_for_file: use_key_in_widget_constructors, avoid_print, deprecated_member_use, use_build_context_synchronously
 
-import 'dart:ui';
-
-import 'package:app_lock_flutter/executables/controllers/method_channel_controller.dart';
 import 'package:app_lock_flutter/executables/controllers/password_controller.dart';
 // import 'package:app_lock_flutter/models/application_model.dart';
 import 'package:app_lock_flutter/screens/add_to_lockedList_sheet.dart';
@@ -60,11 +57,7 @@ class UnlockedAppScreen extends StatelessWidget {
                           heading: "Stop",
                           bodyText: "Sure you want to stop AppLock");
                     },
-                  ).then((value) {
-                    if (value == true) {
-                      Get.find<MethodChannelController>().stopForeground();
-                    }
-                  });
+                  );
                 },
                 icon: Icon(
                   Icons.disabled_by_default_rounded,
