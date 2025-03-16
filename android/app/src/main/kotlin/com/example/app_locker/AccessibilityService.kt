@@ -3,6 +3,8 @@ package com.example.app_locker
 import android.accessibilityservice.AccessibilityService
 import android.view.accessibility.AccessibilityEvent
 import android.util.Log
+import android.content.Context
+import android.app.ActivityManager
 
 class AppDetectionAccessibilityService : AccessibilityService() {
 
@@ -15,7 +17,7 @@ class AppDetectionAccessibilityService : AccessibilityService() {
         "com.transsion.XOSLauncher",
         "com.sec.android.app.launcher",
         "com.google.android.apps.nexuslauncher",
-        "com.android.launcher3" 
+        "com.android.launcher3"
     )
 
     override fun onServiceConnected() {
@@ -23,6 +25,10 @@ class AppDetectionAccessibilityService : AccessibilityService() {
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
+        if (!isForegroundServiceRunning()) {
+            return
+        }
+
         event?.let {
             if (it.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
                 val packageName = it.packageName?.toString()
@@ -49,5 +55,15 @@ class AppDetectionAccessibilityService : AccessibilityService() {
 
     override fun onInterrupt() {
         Log.d("AppDetectionAccessibilityService", "Service interrupted")
+    }
+
+    private fun isForegroundServiceRunning(): Boolean {
+        val manager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        for (service in manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (AppDetectionService::class.java.name == service.service.className) {
+                return true
+            }
+        }
+        return false
     }
 }

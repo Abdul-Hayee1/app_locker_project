@@ -29,6 +29,11 @@ class AppDetectionService : Service() {
         return START_STICKY
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        stopAppUsageMonitoring()
+    }
+
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
@@ -53,5 +58,11 @@ class AppDetectionService : Service() {
         val intent = Intent(this, AppDetectionAccessibilityService::class.java)
         startService(intent)
         Log.d("AppDetectionService", "AccessibilityService started for app usage monitoring")
+    }
+
+    private fun stopAppUsageMonitoring() {
+        val intent = Intent(this, AppDetectionAccessibilityService::class.java)
+        stopService(intent)
+        Log.d("AppDetectionService", "AccessibilityService stopped")
     }
 }

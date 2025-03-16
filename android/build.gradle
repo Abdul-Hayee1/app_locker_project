@@ -1,3 +1,15 @@
+buildscript {
+    ext.kotlin_version = '1.8.10'
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.1.2'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
 allprojects {
     repositories {
         google()
@@ -6,12 +18,25 @@ allprojects {
 }
 
 rootProject.buildDir = "../build"
+
+// Set build directories for subprojects
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
 }
 
+// Merge all afterEvaluate logic in one block!
 subprojects {
     afterEvaluate { project ->
+        // Force compileSdkVersion & buildToolsVersion
+        if (project.plugins.hasPlugin("com.android.application") ||
+            project.plugins.hasPlugin("com.android.library")) {
+            project.android {
+                compileSdkVersion 34
+                buildToolsVersion "34.0.0"
+            }
+        }
+
+        // Set default namespace if not set
         if (project.hasProperty('android')) {
             project.android {
                 if (namespace == null) {
@@ -20,12 +45,12 @@ subprojects {
             }
         }
     }
-}
 
-subprojects {
+    // Required for evaluation order
     project.evaluationDependsOn(":app")
 }
 
+// Clean task
 tasks.register("clean", Delete) {
     delete rootProject.buildDir
 }
