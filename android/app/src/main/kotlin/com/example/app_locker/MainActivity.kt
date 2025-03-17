@@ -38,14 +38,18 @@ class MainActivity : FlutterActivity() {
                     result.success("Service stopped")
                 }
                 "showLockScreen" -> {
-                    val durationInSeconds = call.argument<Int>("duration") ?: 3
-                    val intent = Intent(this, LockScreenActivity::class.java).apply {
-                        putExtra("duration", durationInSeconds.toLong())
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    }
-                    startActivity(intent)
-                    result.success("Lock screen shown")
-                }
+    val durationInSeconds = call.argument<Int>("duration") ?: 3
+    val packageName = call.argument<String>("packageName") ?: ""
+
+    val intent = Intent(this, LockScreenActivity::class.java).apply {
+        putExtra("duration", durationInSeconds.toLong())
+        putExtra("packageName", packageName)
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+    }
+    startActivity(intent)
+    result.success("Lock screen shown")
+}
+
                 else -> result.notImplemented()
             }
         }

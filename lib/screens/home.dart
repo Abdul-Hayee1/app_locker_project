@@ -59,19 +59,23 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
     if (lockedApp.isLocked == true) {
       print("App is locked. Showing lock screen...");
-      _showLockScreen(lockedApp.holdDuration ?? const Duration(seconds: 3));
+      _showLockScreen(
+          lockedApp.holdDuration ?? const Duration(seconds: 3), packageName);
     } else {
       print("App is not locked.");
     }
   }
 
-  void _showLockScreen(Duration duration) async {
+  void _showLockScreen(Duration duration, String packageName) async {
     try {
       await serviceChannel.invokeMethod(
         'showLockScreen',
-        {'duration': duration.inSeconds.toInt()},
+        {
+          'duration': duration.inSeconds.toInt(),
+          'packageName': packageName,
+        },
       );
-      print("Value check: ${duration.inSeconds.toInt()}");
+      print("Value check: ${duration.inSeconds.toInt()} for $packageName");
     } on PlatformException catch (e) {
       print("Failed to show lock screen: '${e.message}'.");
     }

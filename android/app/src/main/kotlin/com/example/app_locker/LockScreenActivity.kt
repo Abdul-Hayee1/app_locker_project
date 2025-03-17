@@ -10,17 +10,22 @@ import androidx.appcompat.app.AppCompatActivity
 
 class LockScreenActivity : AppCompatActivity() {
 
-    private var volumeButtonPressedTime: Long = 0
+     private var volumeButtonPressedTime: Long = 0
     private var unlockDuration: Long = 3L
+    private lateinit var lockedPackageName: String
     private val handler = Handler(Looper.getMainLooper())
 
     companion object {
         var isUnlocked = false
+        var activePackageName: String? = null
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         unlockDuration = intent.getLongExtra("duration", 3L)
+        lockedPackageName = intent.getStringExtra("packageName") ?: ""
+        activePackageName = lockedPackageName
+
         window.setFlags(
             WindowManager.LayoutParams.FLAG_FULLSCREEN,
             WindowManager.LayoutParams.FLAG_FULLSCREEN
@@ -35,6 +40,7 @@ class LockScreenActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         isUnlocked = false
+        activePackageName = null
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
@@ -66,6 +72,7 @@ class LockScreenActivity : AppCompatActivity() {
 
     private fun unlockApp() {
         isUnlocked = true
+         activePackageName = null
         Toast.makeText(this, "App Unlocked", Toast.LENGTH_SHORT).show()
         finish()
     }

@@ -5,10 +5,12 @@ import android.view.accessibility.AccessibilityEvent
 import android.util.Log
 import android.content.Context
 import android.app.ActivityManager
+import android.content.Intent
+import android.os.Handler
+import android.os.Looper
 
 class AppDetectionAccessibilityService : AccessibilityService() {
 
-    private val openedApps = mutableSetOf<String>()
     private var currentForegroundApp: String? = null
     private val ignoredPackages = setOf(
         "com.android.systemui",
@@ -19,6 +21,10 @@ class AppDetectionAccessibilityService : AccessibilityService() {
         "com.google.android.apps.nexuslauncher",
         "com.android.launcher3"
     )
+
+    // Handler & Runnable for delayed locking
+    private val handler = Handler(Looper.getMainLooper())
+    private var lockRunnable: Runnable? = null
 
     override fun onServiceConnected() {
         Log.d("AppDetectionAccessibilityService", "Service connected")
@@ -31,26 +37,51 @@ class AppDetectionAccessibilityService : AccessibilityService() {
 
         event?.let {
             if (it.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
-                val packageName = it.packageName?.toString()
+                val packageName = it.packageName?.toString() ?: return
 
-                if (packageName == null || ignoredPackages.contains(packageName)) {
+                Log.d("AccessibilityService", "Detected package: $packageName")
+
+                // Cancel previous pending lock if any
+                if (lockRunnable != null) {
+                    handler.removeCallbacks(lockRunnable!!)
+                    lockRunnable = null
+                }
+
+                // Check if launcher or ignored app
+                if (isLauncherApp(packageName) || ignoredPackages.contains(packageName)) {
+                    Log.d("AccessibilityService", "Launcher detected: $packageName, skipping lock")
                     return
                 }
 
-                if (packageName == currentForegroundApp) {
-                    return
-                }
+                // App detected, post delayed lock
+              lockRunnable = Runnable {
+    if (!isLauncherApp(packageName) &&
+        !ignoredPackages.contains(packageName) &&
+        !LockScreenActivity.isUnlocked &&
+        LockScreenActivity.activePackageName != packageName // Prevent duplicate locks
+    ) {
+        Log.d("AccessibilityService", "App detected after delay: $packageName, showing lock")
 
-                if (!LockScreenActivity.isUnlocked && !openedApps.contains(packageName)) {
-                    MainActivity.instance?.sendAppUsageEvent(packageName)
-                    return
-                }
+        currentForegroundApp = packageName
+        LockScreenActivity.isUnlocked = false
 
-                currentForegroundApp = packageName
-                openedApps.add(packageName)
-                openedApps.removeIf { it != currentForegroundApp }
+        MainActivity.instance?.sendAppUsageEvent(packageName)
+    } else {
+        Log.d("AccessibilityService", "Launcher or unlocked app detected after delay, not locking")
+    }
+}
+
+
+                handler.postDelayed(lockRunnable!!, 300) // 300ms delay
             }
         }
+    }
+
+    private fun isLauncherApp(packageName: String): Boolean {
+        val intent = Intent(Intent.ACTION_MAIN)
+        intent.addCategory(Intent.CATEGORY_HOME)
+        val resolveInfo = packageManager.resolveActivity(intent, 0)
+        return resolveInfo?.activityInfo?.packageName == packageName
     }
 
     override fun onInterrupt() {
