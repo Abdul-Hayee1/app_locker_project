@@ -1,6 +1,6 @@
 // ignore_for_file: avoid_print, use_build_context_synchronously
 
-import 'package:app_lock_flutter/models/application_model.dart';
+// import 'package:app_lock_flutter/models/application_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -11,16 +11,16 @@ import 'package:app_lock_flutter/executables/controllers/apps_controller.dart';
 import 'package:app_lock_flutter/screens/unlocked_apps.dart';
 import 'package:app_lock_flutter/widgets/ask_permission_dialog.dart';
 
-class AppLockerService {
-  static const EventChannel _eventChannel =
-      EventChannel('com.example.app_locker/events');
+// class AppLockerService {
+//   static const EventChannel _eventChannel =
+//       EventChannel('com.example.app_locker/events');
 
-  Stream<String> get appUsageStream {
-    return _eventChannel
-        .receiveBroadcastStream()
-        .map((event) => event as String);
-  }
-}
+//   Stream<String> get appUsageStream {
+//     return _eventChannel
+//         .receiveBroadcastStream()
+//         .map((event) => event as String);
+//   }
+// }
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -34,7 +34,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   static const accessibilityChannel =
       MethodChannel('com.example.app_locker/accessibility');
 
-  final AppLockerService _appLockerService = AppLockerService();
+  // final AppLockerService _appLockerService = AppLockerService();
   bool _isDialogVisible = false;
 
   Future<void> _startService() async {
@@ -48,38 +48,38 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     }
   }
 
-  void _checkIfAppIsLocked(String packageName) {
-    print("Checking if app is locked for package: $packageName");
+  // void _checkIfAppIsLocked(String packageName) {
+  //   print("Checking if app is locked for package: $packageName");
 
-    final lockList = Get.find<AppsController>().lockList;
-    final lockedApp = lockList.firstWhere(
-      (app) => app.application!.packageName == packageName,
-      orElse: () => ApplicationDataModel(),
-    );
+  //   final lockList = Get.find<AppsController>().lockList;
+  //   final lockedApp = lockList.firstWhere(
+  //     (app) => app.application!.packageName == packageName,
+  //     orElse: () => ApplicationDataModel(),
+  //   );
 
-    if (lockedApp.isLocked == true) {
-      print("App is locked. Showing lock screen...");
-      _showLockScreen(
-          lockedApp.holdDuration ?? const Duration(seconds: 3), packageName);
-    } else {
-      print("App is not locked.");
-    }
-  }
+  //   if (lockedApp.isLocked == true) {
+  //     print("App is locked. Showing lock screen...");
+  //     _showLockScreen(
+  //         lockedApp.holdDuration ?? const Duration(seconds: 3), packageName);
+  //   } else {
+  //     print("App is not locked.");
+  //   }
+  // }
 
-  void _showLockScreen(Duration duration, String packageName) async {
-    try {
-      await serviceChannel.invokeMethod(
-        'showLockScreen',
-        {
-          'duration': duration.inSeconds.toInt(),
-          'packageName': packageName,
-        },
-      );
-      print("Value check: ${duration.inSeconds.toInt()} for $packageName");
-    } on PlatformException catch (e) {
-      print("Failed to show lock screen: '${e.message}'.");
-    }
-  }
+  // void _showLockScreen(Duration duration, String packageName) async {
+  //   try {
+  //     await serviceChannel.invokeMethod(
+  //       'showLockScreen',
+  //       {
+  //         'duration': duration.inSeconds.toInt(),
+  //         'packageName': packageName,
+  //       },
+  //     );
+  //     print("Value check: ${duration.inSeconds.toInt()} for $packageName");
+  //   } on PlatformException catch (e) {
+  //     print("Failed to show lock screen: '${e.message}'.");
+  //   }
+  // }
 
   Future<void> _requestAccessibilityServicePermission() async {
     try {
@@ -186,9 +186,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       _startService();
       _checkAccessibilityService();
 
-      _appLockerService.appUsageStream.listen((packageName) {
-        _checkIfAppIsLocked(packageName);
-      });
+      // _appLockerService.appUsageStream.listen((packageName) {
+      //   _checkIfAppIsLocked(packageName);
+      // });
     });
   }
 

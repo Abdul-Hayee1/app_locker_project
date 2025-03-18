@@ -1,7 +1,10 @@
 package com.example.app_locker
 
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.provider.Settings
+import com.google.gson.Gson
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
@@ -12,6 +15,7 @@ class MainActivity : FlutterActivity() {
     private val SERVICE_CHANNEL = "com.example.app_locker/service"
     private val ACCESSIBILITY_CHANNEL = "com.example.app_locker/accessibility"
     private val EVENT_CHANNEL = "com.example.app_locker/events"
+    private val CHANNEL = "com.example.app_locker/native"
 
     var eventSink: EventChannel.EventSink? = null
 
@@ -27,6 +31,7 @@ class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 
+        // Service Channel
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, SERVICE_CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
                 "startService" -> {
@@ -38,22 +43,34 @@ class MainActivity : FlutterActivity() {
                     result.success("Service stopped")
                 }
                 "showLockScreen" -> {
-    val durationInSeconds = call.argument<Int>("duration") ?: 3
-    val packageName = call.argument<String>("packageName") ?: ""
+                    val durationInSeconds = call.argument<Int>("duration") ?: 3
+                    val packageName = call.argument<String>("packageName") ?: ""
 
-    val intent = Intent(this, LockScreenActivity::class.java).apply {
-        putExtra("duration", durationInSeconds.toLong())
-        putExtra("packageName", packageName)
-        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-    }
-    startActivity(intent)
-    result.success("Lock screen shown")
-}
-
+                    val intent = Intent(this, LockScreenActivity::class.java).apply {
+                        putExtra("duration", durationInSeconds.toLong())
+                        putExtra("packageName", packageName)
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                    }
+                    startActivity(intent)
+                    result.success("Lock screen shown")
+                }
                 else -> result.notImplemented()
             }
         }
 
+        // Native Channel (for lock list updates)
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "updateLockList" -> {
+                    val lockList = call.arguments as List<Map<String, Any>>
+                    saveLockList(lockList)
+                    result.success("Lock list updated")
+                }
+                else -> result.notImplemented()
+            }
+        }
+
+        // Accessibility Channel
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, ACCESSIBILITY_CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
                 "requestAccessibilityServicePermission" -> {
@@ -67,6 +84,7 @@ class MainActivity : FlutterActivity() {
             }
         }
 
+        // Event Channel
         EventChannel(flutterEngine.dartExecutor.binaryMessenger, EVENT_CHANNEL).setStreamHandler(
             object : EventChannel.StreamHandler {
                 override fun onListen(arguments: Any?, events: EventChannel.EventSink) {
@@ -78,6 +96,17 @@ class MainActivity : FlutterActivity() {
                 }
             }
         )
+    }
+
+    private fun saveLockList(lockList: List<Map<String, Any>>) {
+        val sharedPreferences = getSharedPreferences("AppLockerPrefs", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+
+        // Convert the lock list to JSON and save it
+        val gson = Gson()
+        val lockListJson = gson.toJson(lockList)
+        editor.putString("lockList", lockListJson)
+        editor.apply()
     }
 
     fun sendAppUsageEvent(packageName: String) {

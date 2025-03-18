@@ -118,26 +118,43 @@ class _AddToLockedListModalState extends State<_AddToLockedListModal> {
           ElevatedButton(
             onPressed: () {
               final appsController = Get.find<AppsController>();
-              appsController.addToLockedApps(widget.application, context,
-                  Duration(seconds: durationInSeconds));
-              Fluttertoast.showToast(
-                msg: "Added successfully",
-                toastLength: Toast.LENGTH_SHORT,
-                gravity: ToastGravity.BOTTOM,
-                backgroundColor: Colors.black54,
-                textColor: Colors.white,
-                fontSize: 16.0,
-              );
-              // Removing this app from unLockedList
+              if (appsController.selectLockList
+                  .contains(widget.application.name)) {
+                appsController.addToLockedApps(
+                    widget.application, context, Duration.zero);
+                Fluttertoast.showToast(
+                  msg: "Removed from locked apps",
+                  toastLength: Toast.LENGTH_SHORT,
+                  gravity: ToastGravity.BOTTOM,
+                  backgroundColor: Colors.black54,
+                  textColor: Colors.white,
+                  fontSize: 16.0,
+                );
+              } else {
+                appsController.addToLockedApps(widget.application, context,
+                    Duration(seconds: durationInSeconds));
+                Fluttertoast.showToast(
+                  msg: "Added successfully",
+                  toastLength: Toast.LENGTH_SHORT,
+                  gravity: ToastGravity.BOTTOM,
+                  backgroundColor: Colors.black54,
+                  textColor: Colors.white,
+                  fontSize: 16.0,
+                );
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).primaryColor,
             ),
-            child: const Text(
-              'Add',
-              style: TextStyle(fontSize: 16, color: Colors.white),
+            child: Text(
+              Get.find<AppsController>()
+                      .selectLockList
+                      .contains(widget.application.name)
+                  ? 'Remove'
+                  : 'Add',
+              style: const TextStyle(fontSize: 16, color: Colors.white),
             ),
-          ),
+          )
         ],
       ),
     );

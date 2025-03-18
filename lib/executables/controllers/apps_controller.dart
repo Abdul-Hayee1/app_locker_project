@@ -15,6 +15,18 @@ import 'package:app_lock_flutter/executables/controllers/method_channel_controll
 import 'package:app_lock_flutter/services/constant.dart';
 import '../../models/application_model.dart';
 
+class NativeChannel {
+  static const _channel = MethodChannel('com.example.app_locker/native');
+
+  static Future<void> sendLockList(List<Map<String, dynamic>> lockList) async {
+    try {
+      await _channel.invokeMethod('updateLockList', lockList);
+    } on PlatformException catch (e) {
+      print("Failed to send lock list: '${e.message}'.");
+    }
+  }
+}
+
 class AppsController extends GetxController implements GetxService {
   SharedPreferences prefs;
   AppsController({required this.prefs});
@@ -47,12 +59,29 @@ class AppsController extends GetxController implements GetxService {
     getAppsData();
     loadLockedApps();
     _listenToEvents();
+    updateLockList(lockList);
   }
 
   void _listenToEvents() {
     eventChannel.receiveBroadcastStream().listen((event) {
       print("Testing AppLocker App opened: $event");
     });
+  }
+
+  void updateLockList(List<ApplicationDataModel> lockList) {
+    final List<Map<String, dynamic>> lockListData = lockList.map((app) {
+      // Print the holdDuration for each app
+      print(
+          "App: ${app.application!.packageName}, Hold Duration: ${app.holdDuration?.inSeconds ?? 3} seconds");
+
+      return {
+        'packageName': app.application!.packageName,
+        'isLocked': app.isLocked,
+        'holdDuration': app.holdDuration?.inSeconds.toInt() ?? 3,
+      };
+    }).toList();
+
+    NativeChannel.sendLockList(lockListData);
   }
 
   changeQuestionIndex(index) {
@@ -137,6 +166,7 @@ class AppsController extends GetxController implements GetxService {
     selectLockList =
         lockList.map((app) => app.application!.name).toList(); // Sync names
 
+    updateLockList(lockList);
     update([addRemoveToUnlockUpdate]);
   }
 
@@ -167,6 +197,7 @@ class AppsController extends GetxController implements GetxService {
               msg: "You can add only 16 apps in locked list");
         }
       }
+      updateLockList(lockList);
     } catch (e) {
       log("-------$e", name: "addRemoveFromLockedAppsFromSearch");
     }
@@ -225,6 +256,7 @@ class AppsController extends GetxController implements GetxService {
 
       await saveLockedApps();
       print("Locked apps saved to SharedPreferences.");
+      updateLockList(lockList);
     } catch (e) {
       log("-------$e", name: "addToLockedApps");
       print("Error encountered: $e");
