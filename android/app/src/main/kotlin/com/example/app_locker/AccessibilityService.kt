@@ -57,8 +57,7 @@ class AppDetectionAccessibilityService : AccessibilityService() {
               lockRunnable = Runnable {
     if (!isLauncherApp(packageName) &&
         !ignoredPackages.contains(packageName) &&
-        !LockScreenActivity.isUnlocked &&
-        LockScreenActivity.activePackageName != packageName // Prevent duplicate locks
+        !LockScreenActivity.isUnlocked
     ) {
         Log.d("AccessibilityService", "App detected after delay: $packageName, showing lock")
 
