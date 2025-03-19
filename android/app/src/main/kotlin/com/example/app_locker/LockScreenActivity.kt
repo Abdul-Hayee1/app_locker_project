@@ -41,6 +41,7 @@ class LockScreenActivity : AppCompatActivity() {
         super.onDestroy()
         if (isUnlocked) {
             // Only reset if the app was unlocked
+            isUnlocked = false
             activePackageName = null
         }
     }

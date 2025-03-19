@@ -10,6 +10,7 @@ import android.content.SharedPreferences
 import android.os.Handler
 import android.os.Looper
 import com.google.gson.Gson
+import android.os.Build
 import com.google.gson.reflect.TypeToken
 
 class AppDetectionAccessibilityService : AccessibilityService() {
@@ -25,9 +26,32 @@ class AppDetectionAccessibilityService : AccessibilityService() {
         "com.android.launcher3"
     )
 
-    private val systemUiPackage = setOf(
-        "com.transsion.XOSLauncher",
-    )
+    private val systemUiPackages = mapOf(
+    "infinix" to setOf("com.transsion.XOSLauncher"), // Key is "infinix"
+    "samsung" to setOf("com.sec.android.app.launcher", "com.samsung.android.launcher"),
+    "realme" to setOf("com.oppo.launcher", "com.realme.launcher"),
+    "oneplus" to setOf("com.oneplus.launcher", "com.oneplus.android"),
+    "xiaomi" to setOf("com.miui.home", "com.mi.android.globallauncher"),
+    "oppo" to setOf("com.oppo.launcher", "com.coloros.launcher"),
+    "vivo" to setOf("com.vivo.launcher"),
+    "huawei" to setOf("com.huawei.android.launcher"),
+    "google" to setOf("com.android.launcher3", "com.google.android.apps.nexuslauncher")
+)
+    
+fun getSystemUiPackage(): Set<String> {
+    // Normalize the manufacturer name
+    val manufacturer = Build.MANUFACTURER.lowercase()
+        .replace(" ", "") // Remove spaces
+        .replace("limited", "") // Remove "limited"
+        .replace("mobility", "") // Remove "mobility"
+        .trim() // Trim any extra spaces
+
+    Log.d("AccessibilityService", "Normalized Manufacturer: $manufacturer")
+    Log.d("AccessibilityService", "System UI Packages: ${systemUiPackages[manufacturer] ?: setOf("com.android.launcher3")}")
+
+    return systemUiPackages[manufacturer] ?: setOf("com.android.launcher3")
+}
+
 
     // Handler & Runnable for delayed locking
     private val handler = Handler(Looper.getMainLooper())
@@ -54,8 +78,8 @@ class AppDetectionAccessibilityService : AccessibilityService() {
                     lockRunnable = null
                 }
 
-                 if (systemUiPackage.contains(packageName)) {
-                    LockScreenActivity.isUnlocked = false
+                val systemUiPackage = getSystemUiPackage()
+                if (systemUiPackage.contains(packageName)) {
                     currentForegroundApp = null
                     return
                 }
