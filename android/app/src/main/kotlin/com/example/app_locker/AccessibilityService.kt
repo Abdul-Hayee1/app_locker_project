@@ -25,6 +25,10 @@ class AppDetectionAccessibilityService : AccessibilityService() {
         "com.android.launcher3"
     )
 
+    private val systemUiPackage = setOf(
+        "com.transsion.XOSLauncher",
+    )
+
     // Handler & Runnable for delayed locking
     private val handler = Handler(Looper.getMainLooper())
     private var lockRunnable: Runnable? = null
@@ -50,6 +54,12 @@ class AppDetectionAccessibilityService : AccessibilityService() {
                     lockRunnable = null
                 }
 
+                 if (systemUiPackage.contains(packageName)) {
+                    LockScreenActivity.isUnlocked = false
+                    currentForegroundApp = null
+                    return
+                }
+
                 // Check if launcher or ignored app
                 if (isLauncherApp(packageName) || ignoredPackages.contains(packageName)) {
                     Log.d("AccessibilityService", "Launcher detected: $packageName, skipping lock")
@@ -57,17 +67,17 @@ class AppDetectionAccessibilityService : AccessibilityService() {
                 }
 
                 // App detected, post delayed lock
-              lockRunnable = Runnable {
-    if (!isLauncherApp(packageName) &&
-        !ignoredPackages.contains(packageName) &&
-        !LockScreenActivity.isUnlocked
-    ) {
-        Log.d("AccessibilityService", "App detected after delay: $packageName, showing lock")
+                lockRunnable = Runnable {
+                    if (!isLauncherApp(packageName) &&
+                        !ignoredPackages.contains(packageName) &&
+                        !LockScreenActivity.isUnlocked &&
+                        packageName != currentForegroundApp
+                    ) {
+                        Log.d("AccessibilityService", "App detected after delay: $packageName, showing lock")
 
-        currentForegroundApp = packageName
-        LockScreenActivity.isUnlocked = false
+                        currentForegroundApp = packageName
 
-        val lockList = getLockList()
+                        val lockList = getLockList()
 
                         // Find the locked app in the lock list
                         val lockedApp = lockList.firstOrNull { app ->
@@ -88,17 +98,16 @@ class AppDetectionAccessibilityService : AccessibilityService() {
                             val intent = Intent(this, LockScreenActivity::class.java).apply {
                                 putExtra("duration", holdDuration) // Pass the hold duration
                                 putExtra("packageName", packageName)
-                                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                             }
                             startActivity(intent)
                         } else {
                             Log.d("AccessibilityService", "App is not locked: $packageName")
                         }
-                
-    } else {
-        Log.d("AccessibilityService", "Launcher or unlocked app detected after delay, not locking")
-    }
-}
+                    } else {
+                        Log.d("AccessibilityService", "Launcher or unlocked app detected after delay, not locking")
+                    }
+                }
                 handler.postDelayed(lockRunnable!!, 300) // 300ms delay
             }
         }
@@ -125,7 +134,7 @@ class AppDetectionAccessibilityService : AccessibilityService() {
         return false
     }
 
-     private fun getLockList(): List<Map<String, Any>> {
+    private fun getLockList(): List<Map<String, Any>> {
         val sharedPreferences = getSharedPreferences("AppLockerPrefs", Context.MODE_PRIVATE)
         val lockListJson = sharedPreferences.getString("lockList", "[]") ?: "[]"
 

@@ -36,7 +36,6 @@ class AppsController extends GetxController implements GetxService {
   TextEditingController typeAnswer = TextEditingController();
   TextEditingController checkAnswer = TextEditingController();
   TextEditingController searchApkText = TextEditingController();
-  // List<Application> unLockList = [];    // deprecated one
   List<AppInfo> unLockList = []; // alternate
   List<AppInfo> systemApps = [];
   List<ApplicationDataModel> searchedApps = [];
@@ -266,34 +265,6 @@ class AppsController extends GetxController implements GetxService {
     update([addRemoveToUnlockUpdate]);
     print("Finished addToLockedApps.");
   }
-
-  // Future<void> handleAppLaunch(AppInfo app) async {
-  //   if (selectLockList.contains(app.name)) {
-  //     // Show lock screen if app is locked
-  //     showLockScreen(app.packageName);
-  //   } else {
-  //     // Otherwise, launch the app normally
-  //     InstalledApps.startApp(app.packageName);
-  //   }
-  // }
-
-  // void showLockScreen(String packageName) {
-  //   Get.dialog(
-  //     AlertDialog(
-  //       title: const Text("App Locked"),
-  //       content: const Text("This app is locked. Enter passcode to continue."),
-  //       actions: [
-  //         TextButton(
-  //           onPressed: () {
-  //             Get.back(); // Close the lock screen
-  //           },
-  //           child: const Text("Unlock"),
-  //         )
-  //       ],
-  //     ),
-  //     barrierDismissible: false,
-  //   );
-  // }
 
   appSearch() {
     searchedApps.clear();
