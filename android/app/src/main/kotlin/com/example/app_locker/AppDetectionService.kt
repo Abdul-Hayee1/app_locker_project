@@ -3,13 +3,13 @@ package com.example.app_locker
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
+import android.content.pm.ServiceInfo
 import androidx.core.app.NotificationCompat
 
 class AppDetectionService : Service() {
@@ -20,8 +20,14 @@ class AppDetectionService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        // Ensure notification channel is created
         createNotificationChannel()
-        startForeground(1, createNotification())
+        // If we're on Android 14 or later, ensure notification starts properly
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            startForeground(1, createNotification(), ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+        } else {
+            startForeground(1, createNotification())
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -56,7 +62,12 @@ class AppDetectionService : Service() {
 
     private fun startAppUsageMonitoring() {
         val intent = Intent(this, AppDetectionAccessibilityService::class.java)
-        startService(intent)
+        // Start the service as foreground to meet Android 14 requirements
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startService(intent)
+        } else {
+            startService(intent)
+        }
         Log.d("AppDetectionService", "AccessibilityService started for app usage monitoring")
     }
 

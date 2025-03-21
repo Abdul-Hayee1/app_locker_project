@@ -10,6 +10,11 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
 import android.os.Bundle
+import android.os.Build
+import android.content.pm.PackageManager
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import android.net.Uri
 
 class MainActivity : FlutterActivity() {
     private val SERVICE_CHANNEL = "com.example.app_locker/service"
@@ -21,12 +26,28 @@ class MainActivity : FlutterActivity() {
 
     companion object {
         var instance: MainActivity? = null
+        private const val REQUEST_CODE_OVERLAY_PERMISSION = 1001
+        private const val REQUEST_CODE_NOTIFICATION_PERMISSION = 1002
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         instance = this
+        requestPermissions()
     }
+
+    private fun requestPermissions() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        if (!Settings.canDrawOverlays(this)) {
+            val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
+            startActivityForResult(intent, REQUEST_CODE_OVERLAY_PERMISSION)
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), REQUEST_CODE_NOTIFICATION_PERMISSION)
+        }
+    }
+}
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
