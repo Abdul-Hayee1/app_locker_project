@@ -21,6 +21,7 @@ class MainActivity : FlutterActivity() {
     private val ACCESSIBILITY_CHANNEL = "com.example.app_locker/accessibility"
     private val EVENT_CHANNEL = "com.example.app_locker/events"
     private val CHANNEL = "com.example.app_locker/native"
+    private val NOTIFICATION_CHANNEL = "com.example.app_locker/notification"
 
     var eventSink: EventChannel.EventSink? = null
 
@@ -33,21 +34,22 @@ class MainActivity : FlutterActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         instance = this
-        requestPermissions()
     }
-
-    private fun requestPermissions() {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-        if (!Settings.canDrawOverlays(this)) {
-            val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
-            startActivityForResult(intent, REQUEST_CODE_OVERLAY_PERMISSION)
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), REQUEST_CODE_NOTIFICATION_PERMISSION)
+    
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        when (requestCode) {
+            REQUEST_CODE_NOTIFICATION_PERMISSION -> {
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // Notification permission granted, start the service
+                    startService(Intent(this, AppDetectionService::class.java))
+                } else {
+                    // Notification permission denied
+                    println("Notification permission denied")
+                }
+            }
         }
     }
-}
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -56,8 +58,12 @@ class MainActivity : FlutterActivity() {
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, SERVICE_CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
                 "startService" -> {
-                    startService(Intent(this, AppDetectionService::class.java))
-                    result.success("Service started")
+                    if (areNotificationPermissionsGranted()) {
+                        startService(Intent(this, AppDetectionService::class.java))
+                        result.success("Service started")
+                    } else {
+                        result.error("PERMISSION_DENIED", "Notification permissions are not granted", null)
+                    }
                 }
                 "stopService" -> {
                     stopService(Intent(this, AppDetectionService::class.java))
@@ -79,13 +85,15 @@ class MainActivity : FlutterActivity() {
             }
         }
 
-        // Native Channel (for lock list updates)
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
+        // Notification Permission Channel
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, NOTIFICATION_CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
-                "updateLockList" -> {
-                    val lockList = call.arguments as List<Map<String, Any>>
-                    saveLockList(lockList)
-                    result.success("Lock list updated")
+                "areNotificationPermissionsGranted" -> {
+                    result.success(areNotificationPermissionsGranted())
+                }
+                "requestNotificationPermission" -> {
+                    requestNotificationPermission()
+                    result.success("Notification permission requested")
                 }
                 else -> result.notImplemented()
             }
@@ -119,6 +127,20 @@ class MainActivity : FlutterActivity() {
         )
     }
 
+    private fun areNotificationPermissionsGranted(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+        } else {
+            true // Notification permissions are not required below Android 13
+        }
+    }
+
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), REQUEST_CODE_NOTIFICATION_PERMISSION)
+        }
+    }
+
     private fun saveLockList(lockList: List<Map<String, Any>>) {
         val sharedPreferences = getSharedPreferences("AppLockerPrefs", Context.MODE_PRIVATE)
         val editor = sharedPreferences.edit()
@@ -128,10 +150,6 @@ class MainActivity : FlutterActivity() {
         val lockListJson = gson.toJson(lockList)
         editor.putString("lockList", lockListJson)
         editor.apply()
-    }
-
-    fun sendAppUsageEvent(packageName: String) {
-        eventSink?.success(packageName)
     }
 
     private fun requestAccessibilityServicePermission() {

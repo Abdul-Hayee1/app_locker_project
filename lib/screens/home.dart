@@ -1,15 +1,12 @@
 // ignore_for_file: avoid_print, use_build_context_synchronously
 
-// import 'package:app_lock_flutter/models/application_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:app_lock_flutter/executables/controllers/method_channel_controller.dart';
 import 'package:app_lock_flutter/executables/controllers/permission_controller.dart';
 import 'package:app_lock_flutter/executables/controllers/apps_controller.dart';
 import 'package:app_lock_flutter/screens/unlocked_apps.dart';
-import 'package:app_lock_flutter/widgets/ask_permission_dialog.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -22,6 +19,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   static const serviceChannel = MethodChannel('com.example.app_locker/service');
   static const accessibilityChannel =
       MethodChannel('com.example.app_locker/accessibility');
+  static const notificationChannel =
+      MethodChannel('com.example.app_locker/notification');
 
   bool _isDialogVisible = false;
 
@@ -29,8 +28,15 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     print("Starting service...");
 
     try {
-      await serviceChannel.invokeMethod('startService');
-      print("Service started successfully.");
+      final areNotificationsGranted = await notificationChannel
+          .invokeMethod('areNotificationPermissionsGranted');
+      if (areNotificationsGranted) {
+        await serviceChannel.invokeMethod('startService');
+        print("Service started successfully.");
+      } else {
+        print("Notification permissions are not granted. Service not started.");
+        await _requestNotificationPermission();
+      }
     } on PlatformException catch (e) {
       print("Failed to start service: '${e.message}'.");
     }
@@ -42,6 +48,14 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
           .invokeMethod('requestAccessibilityServicePermission');
     } on PlatformException catch (e) {
       print("Failed to open accessibility settings: '${e.message}'.");
+    }
+  }
+
+  Future<void> _requestNotificationPermission() async {
+    try {
+      await notificationChannel.invokeMethod('requestNotificationPermission');
+    } on PlatformException catch (e) {
+      print("Failed to request notification permission: '${e.message}'.");
     }
   }
 
@@ -116,17 +130,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     });
   }
 
-  getPermissions() async {
-    if (!(await Get.find<MethodChannelController>()
-            .checkNotificationPermission()) ||
-        !(await Get.find<MethodChannelController>().checkOverlayPermission()) ||
-        !(await Get.find<MethodChannelController>()
-            .checkUsageStatePermission())) {
-      Get.find<MethodChannelController>().update();
-      askPermissionBottomSheet(context);
-    }
-  }
-
   @override
   void initState() {
     super.initState();
@@ -136,10 +139,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       Get.find<AppsController>().loadLockedApps();
       Get.find<PermissionController>()
           .getPermission(Permission.ignoreBatteryOptimizations);
-      getPermissions();
-      Get.find<MethodChannelController>().addToLockedAppsMethod();
-      _startService();
-      _checkAccessibilityService();
+      await _startService(); // Check notification permissions and start service
+      _checkAccessibilityService(); // Check accessibility permissions
     });
   }
 
